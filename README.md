@@ -18,7 +18,13 @@ The project explores feature extraction, temporal modeling, and representation l
 📂 Project Structure
 .
 ├── CNN/                    # CNN-based feature extractors
+
+
+
 ├── LSTM/                   # LSTM & autoencoder models
+
+
+
 ├── main_models/            # End-to-end training pipelines
 ├── models_utils/           # Dataset loaders & utilities
 ├── RF_XGB/                 # Random Forest & XGBoost models
