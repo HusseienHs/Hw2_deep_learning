@@ -1,0 +1,23 @@
+# Data (DO NOT PUSH)
+data/
+**/data/
+*.csv
+*.pt
+*.pth
+*.ckpt
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+
+# Logs / outputs
+runs/
+logs/
+*.log
+
+# Virtual environments
+.env
+.venv/
