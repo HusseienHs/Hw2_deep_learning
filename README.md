@@ -11,46 +11,92 @@ The project explores multiple modeling strategies including CNNs, LSTMs, hybrid 
 
 
 
-Source Code/
-├── CNN/
-│   ├── CNN.py
-│   └── cnn_utils.py
-│
-├── LSTM/
-│   ├── lstm_autoencoder.py
-│   └── lstm_autoencoders_utils.py
-│
-├── models_utils/
-│   ├── Datasets.py
-│   ├── GLOBALS.py
-│   ├── utils.py
-│
-├── RF_XGB/
-│   ├── RandomForest.py
-│   └── XGBoost.py
-│
-├── main_models/
-│   ├── only_cnn.ipynb
-│   ├── only_1dcnn.ipynb
-│   ├── lstm+cnn_rf.ipynb
-│   ├── embedding_rf.ipynb
-│   ├── lstm_secret_data.ipynb
-│   ├── only_rf.ipynb
-│   ├── only_xgboost.ipynb
-│   └── simple_prob.ipynb
-│
-├── data/
-│   ├── train.csv
-│   ├── unlabeled/
-│   └── sample_submission.csv
-│
-├── results/
-│   ├── *.csv
-│   ├── *.pth
-│
-├── setup_paths.py
-└── README.md
+📂 Project Structure
 
+This repository is dedicated to the Human Activity Recognition (HAR) project, which aims to classify human activities using sensor data collected from wearable devices.
+The project focuses on building and evaluating multiple deep learning and machine learning models to recognize activities such as walking, reading, using a phone, brushing teeth, and more.
+
+📁 CNN
+
+Contains convolutional neural network implementations used for feature extraction from raw time-series data.
+
+CNN.py – CNN-based feature extractor
+
+cnn_utils.py – Utility functions for CNN models
+
+📁 LSTM
+
+Implements LSTM-based sequence models and autoencoders.
+
+lstm_autoencoder.py – LSTM autoencoder architecture
+
+lstm_autoencoders_utils.py – Helper functions for LSTM training and inference
+
+📁 main_models
+
+Contains all main experiments and model pipelines.
+
+cnn_to_rf.ipynb – 3D CNN feature extractor followed by Random Forest
+
+cnn_to_xgb.ipynb – 3D CNN feature extractor with XGBoost
+
+embedding_nn.ipynb – LSTM autoencoder embeddings with neural network classifier
+
+embedding_rf.ipynb – LSTM embeddings with Random Forest
+
+lstm+cnn_rf.ipynb – Combined CNN + LSTM feature extraction with Random Forest
+
+lstm_secret_data.ipynb – 3D CNN trained on extended dataset with missing data recovery
+
+only_1dcnn.ipynb – Pure 1D CNN model
+
+only_cnn.ipynb – Pure 3D CNN model
+
+only_rf.ipynb – Random Forest baseline
+
+only_xgboost.ipynb – XGBoost-based classifier
+
+simple_prob.ipynb – Probability-based baseline using class frequency
+
+📁 main_utils
+
+Utility scripts used across experiments.
+
+fill_ranges_script.ipynb – Extends missing ranges in training data
+
+generate_graphs.ipynb – Visualization and performance plots
+
+get_all_secret_data.ipynb – Extracts features for hidden test data
+
+get_secret_results.ipynb – Generates final predictions for submission
+
+merge_lstm_results.ipynb – Ensemble method combining multiple LSTM outputs
+
+📁 models_utils
+
+Core utility modules used throughout the project.
+
+Datasets.py – PyTorch dataset classes
+
+GLOBALS.py – Global configuration and constants
+
+utils.py – Feature extraction and helper utilities
+
+📁 NN
+
+Neural network utilities and helpers.
+
+NeuralNetwork.py – General neural network architecture
+
+nn_utils.py – Supporting utility functions
+
+📁 RF_XGB
+
+Classical machine learning models.
+
+RandomForest.py – Random Forest classifier
+
+XGBoost.py – XGBoost model implementation
 
 
 
