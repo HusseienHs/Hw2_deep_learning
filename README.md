@@ -16,6 +16,9 @@ Pretrained time-series models (MOMENT)
 The project explores feature extraction, temporal modeling, and representation learning for activity recognition.
 
 📂 Project Structure
+
+
+
 .
 ├── CNN/                    # CNN-based feature extractors
 
@@ -26,10 +29,28 @@ The project explores feature extraction, temporal modeling, and representation l
 
 
 ├── main_models/            # End-to-end training pipelines
+
+
+
 ├── models_utils/           # Dataset loaders & utilities
+
+
+
 ├── RF_XGB/                 # Random Forest & XGBoost models
+
+
+
+
 ├── NN/                     # Generic neural network utilities
+
+
+
+
 ├── data/                   # Input sensor data
+
+
+
+
 └── README.md
 
 🧠 Models Implemented
