@@ -7,6 +7,10 @@ The goal of the project is to accurately classify human activities such as walki
 The project explores multiple modeling strategies including CNNs, LSTMs, hybrid CNN–LSTM architectures, Random Forests, and ensemble-based approaches.
 
 📂 Project Structure
+
+
+
+
 Source Code/
 ├── CNN/
 │   ├── CNN.py
@@ -46,6 +50,9 @@ Source Code/
 │
 ├── setup_paths.py
 └── README.md
+
+
+
 
 🧠 Project Components
 1️⃣ CNN Models
