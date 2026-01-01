@@ -1,4 +1,5 @@
 import os
+
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
@@ -6,95 +7,99 @@ from torch.utils.data import Dataset
 from models_utils.GLOBALS import files_directory
 
 
-def pad_sequence(data, max_sequence_length):
+def pad_sequence(data: pd.DataFrame, max_sequence_length: int) -> pd.DataFrame:
     """
-    Pads a sequence of data with inverse data from the last timestamp
-    :param data: data to pad
-    :param max_sequence_length: maximum sequence length
-    :return:
+    Pad a sequence by appending reversed samples from the tail until reaching max length.
     """
     while len(data) < max_sequence_length:
-        pad_size = max_sequence_length - len(data)
-        pad_values = data[-pad_size:][::-1]
-        data = pd.concat([data, pad_values], axis=0, ignore_index=True)
+        missing = max_sequence_length - len(data)
+        pad_chunk = data[-missing:][::-1]
+        data = pd.concat([data, pad_chunk], axis=0, ignore_index=True)
+
     return data[:max_sequence_length]
 
 
 class DataframeWithLabels(Dataset):
-    def __init__(self, dataframe):
+    def __init__(self, dataframe: pd.DataFrame):
         self.data = dataframe
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data)
 
     def __getitem__(self, idx):
-        item = self.data.iloc[idx]
-        x = torch.tensor(item.drop(labels=['activity']).values, dtype=torch.float32)
-        y = torch.tensor(item['activity'], dtype=torch.long)
+        row = self.data.iloc[idx]
+        x = torch.tensor(row.drop(labels=["activity"]).values, dtype=torch.float32)
+        y = torch.tensor(row["activity"], dtype=torch.long)
         return x, y
 
 
 class TrainDataframeWithLabels(Dataset):
-    def __init__(self, dataframe, data_type, max_sequence_length):
+    def __init__(self, dataframe: pd.DataFrame, data_type: str, max_sequence_length: int):
         self.data = dataframe
         self.data_type = data_type
         self.max_sequence_length = max_sequence_length
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data)
 
     def __getitem__(self, idx):
-        item = self.data.iloc[idx]
-        file_path = os.path.join(files_directory, f'{item["id"]}.csv', )
-        x = pd.read_csv(file_path)
-        if self.data_type == '2':
-            x = x[x.iloc[:, 0] == 'acceleration [m/s/s]'].iloc[:, 1:]
-        if len(x) < self.max_sequence_length:
-            x = pad_sequence(x, self.max_sequence_length)
-        elif len(x) > self.max_sequence_length:
-            x = x[:self.max_sequence_length]
+        row = self.data.iloc[idx]
+        path = os.path.join(files_directory, f'{row["id"]}.csv')
+        df = pd.read_csv(path)
 
-        x = torch.tensor(x.values, dtype=torch.float32)
-        y = torch.tensor(item['activity'], dtype=torch.long)
+        if self.data_type == "2":
+            df = df[df.iloc[:, 0] == "acceleration [m/s/s]"].iloc[:, 1:]
+
+        if len(df) < self.max_sequence_length:
+            df = pad_sequence(df, self.max_sequence_length)
+        elif len(df) > self.max_sequence_length:
+            df = df[:self.max_sequence_length]
+
+        x = torch.tensor(df.values, dtype=torch.float32)
+        y = torch.tensor(row["activity"], dtype=torch.long)
         return x, y
 
 
 class TrainDataframeWithLabelsNoPad(Dataset):
-    def __init__(self, dataframe, data_type):
+    def __init__(self, dataframe: pd.DataFrame, data_type: str):
         self.data = dataframe
         self.data_type = data_type
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data)
 
     def __getitem__(self, idx):
-        item = self.data.iloc[idx]
-        file_path = os.path.join(files_directory, f'{item["id"]}.csv', )
-        x = pd.read_csv(file_path)
-        if self.data_type == '2':
-            x = x[x.iloc[:, 0] == 'acceleration [m/s/s]'].iloc[:, 1:]
-        x = torch.tensor(x.values, dtype=torch.float32)
-        y = torch.tensor(item['activity'], dtype=torch.long)
+        row = self.data.iloc[idx]
+        path = os.path.join(files_directory, f'{row["id"]}.csv')
+        df = pd.read_csv(path)
+
+        if self.data_type == "2":
+            df = df[df.iloc[:, 0] == "acceleration [m/s/s]"].iloc[:, 1:]
+
+        x = torch.tensor(df.values, dtype=torch.float32)
+        y = torch.tensor(row["activity"], dtype=torch.long)
         return x, y
 
 
 class StandardDataset(Dataset):
-    def __init__(self, files, max_sequence_length, data_type):
+    def __init__(self, files, max_sequence_length: int, data_type: str):
         self.data = files
         self.max_sequence_length = max_sequence_length
         self.data_type = data_type
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data)
 
     def __getitem__(self, idx):
-        file_path = os.path.join(files_directory, f'{self.data[idx]}.csv', )
-        x = pd.read_csv(file_path)
-        if self.data_type == '2':
-            x = x[x.iloc[:, 0] == 'acceleration [m/s/s]'].iloc[:, 1:]
-        if len(x) < self.max_sequence_length:
-            x = pad_sequence(x, self.max_sequence_length)
-        elif len(x) > self.max_sequence_length:
-            x = x[:self.max_sequence_length]
-        x = torch.tensor(x.values, dtype=torch.float32)
-        return x
+        path = os.path.join(files_directory, f"{self.data[idx]}.csv")
+        df = pd.read_csv(path)
+
+        if self.data_type == "2":
+            df = df[df.iloc[:, 0] == "acceleration [m/s/s]"].iloc[:, 1:]
+
+        if len(df) < self.max_sequence_length:
+            df = pad_sequence(df, self.max_sequence_length)
+        elif len(df) > self.max_sequence_length:
+            df = df[:self.max_sequence_length]
+
+        return torch.tensor(df.values, dtype=torch.float32)

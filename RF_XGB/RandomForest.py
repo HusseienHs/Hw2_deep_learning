@@ -8,84 +8,83 @@ from sklearn.metrics import accuracy_score, log_loss
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
-from models_utils.GLOBALS import files_directory
+from models_utils.GLOBALS import files_directory  # kept import as-is (even if overwritten below)
 from models_utils.utils import convert_to_features
-import torch
-import os
 
+# -----------------------
 # Paths
+# -----------------------
 BASE_DIR = r"C:\Users\husseien\Desktop\340915149_322754953\Source Code"
 DATA_DIR = os.path.join(BASE_DIR, "data")
 TRAIN_CSV = os.path.join(DATA_DIR, "train.csv")
 files_directory = os.path.join(DATA_DIR, "unlabeled", "unlabeled")
 
-def train_random_forest(data, cols_to_drop, n_estimators):
-    """
-    Trains a random forest model
-    :param data: data to train / validate
-    :param cols_to_drop: which columns to drop
-    :param n_estimators: number of trees
-    :return: rf model, label encoder
-    """
 
+def train_random_forest(data: pd.DataFrame, cols_to_drop, n_estimators: int):
+    """
+    Train a RandomForest model and print Accuracy + LogLoss.
+    Returns: (model, label_encoder)
+    """
     X = data.drop(columns=cols_to_drop)
-    y = data['activity']
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
+    y = data["activity"]
 
-    # encode label
-    label_encoder = LabelEncoder()
-    y_train_encoded = label_encoder.fit_transform(y_train)
-    y_test = label_encoder.transform(y_test)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, stratify=y, random_state=42
+    )
 
-    # train rf
-    rf_classifier = RandomForestClassifier(n_estimators=n_estimators, random_state=42)
-    rf_classifier.fit(X_train, y_train_encoded)
+    le = LabelEncoder()
+    y_train_enc = le.fit_transform(y_train)
+    y_test_enc = le.transform(y_test)
 
-    # make predictions
-    y_pred_proba = rf_classifier.predict_proba(X_test)
-    y_pred_classes = np.argmax(y_pred_proba, axis=1)
+    model = RandomForestClassifier(n_estimators=n_estimators, random_state=42)
+    model.fit(X_train, y_train_enc)
 
-    # calculate metrics
-    accuracy = accuracy_score(y_test, y_pred_classes)
-    loss = log_loss(y_test, y_pred_proba)
+    proba = model.predict_proba(X_test)
+    pred = np.argmax(proba, axis=1)
 
-    print("Accuracy:", accuracy)
-    print("Log Loss:", loss)
-    return rf_classifier, label_encoder
+    acc = accuracy_score(y_test_enc, pred)
+    ll = log_loss(y_test_enc, proba)
+
+    print("Accuracy:", acc)
+    print("Log Loss:", ll)
+
+    return model, le
 
 
 def get_rf_data():
     """
-    Gets data for random forest / xgboost model
-    :return: data
+    Build feature tables for RF/XGBoost from the per-id CSV files.
+    Returns: (data_type_1_df, data_type_2_df)
     """
+    t1_rows, t2_rows = [], []
+    train_df = pd.read_csv(TRAIN_CSV)
 
-    data_type_1_list = []
-    data_type_2_list = []
+    for _, row in train_df.iterrows():
+        sample_id = row["id"]
+        label = row["activity"]
 
-    train_data = pd.read_csv(TRAIN_CSV)
+        sample_path = os.path.join(files_directory, f"{sample_id}.csv")
+        df = pd.read_csv(sample_path)
 
-    for i, row in train_data.iterrows():
-        class_path = os.path.join(files_directory, f"{row['id']}.csv")
-        new_data = pd.read_csv(class_path)
+        # type 1: 4 columns (includes metric string column)
+        if df.shape[1] == 4:
+            df = df[df.iloc[:, 0] == "acceleration [m/s/s]"].iloc[:, 1:]
+            x = torch.tensor(df["x"].values, dtype=torch.float32)
+            y = torch.tensor(df["y"].values, dtype=torch.float32)
+            z = torch.tensor(df["z"].values, dtype=torch.float32)
 
-        # determine data type based on number of columns
-        if new_data.shape[1] == 4:
-            new_data = new_data[new_data.iloc[:, 0] == 'acceleration [m/s/s]'].iloc[:, 1:]
-            data_x_tensor = torch.tensor(new_data["x"].values, dtype=torch.float32)
-            data_y_tensor = torch.tensor(new_data["y"].values, dtype=torch.float32)
-            data_z_tensor = torch.tensor(new_data["z"].values, dtype=torch.float32)
-            new_data = convert_to_features(data_x_tensor, data_y_tensor, data_z_tensor)
-            new_data['activity'] = row['activity']
-            data_type_1_list.append(new_data)
+            feats = convert_to_features(x, y, z)
+            feats["activity"] = label
+            t1_rows.append(feats)
         else:
-            data_x_tensor = torch.tensor(new_data["x [m]"].values, dtype=torch.float32)
-            data_y_tensor = torch.tensor(new_data["y [m]"].values, dtype=torch.float32)
-            data_z_tensor = torch.tensor(new_data["z [m]"].values, dtype=torch.float32)
-            new_data = convert_to_features(data_x_tensor, data_y_tensor, data_z_tensor)
-            new_data['activity'] = row['activity']
-            data_type_2_list.append(new_data)
+            x = torch.tensor(df["x [m]"].values, dtype=torch.float32)
+            y = torch.tensor(df["y [m]"].values, dtype=torch.float32)
+            z = torch.tensor(df["z [m]"].values, dtype=torch.float32)
 
-    data_type_1 = pd.concat(data_type_1_list, ignore_index=True)
-    data_type_2 = pd.concat(data_type_2_list, ignore_index=True)
+            feats = convert_to_features(x, y, z)
+            feats["activity"] = label
+            t2_rows.append(feats)
+
+    data_type_1 = pd.concat(t1_rows, ignore_index=True)
+    data_type_2 = pd.concat(t2_rows, ignore_index=True)
     return data_type_1, data_type_2
